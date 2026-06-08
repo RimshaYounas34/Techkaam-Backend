@@ -1,8 +1,11 @@
 const Admin = require("../models/Admin");
 const Contact = require("../models/Contact");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
-// CREATE ADMIN
+// ===============================
+// CREATE ADMIN (WITH BCRYPT)
+// ===============================
 exports.createAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -16,26 +19,48 @@ exports.createAdmin = async (req, res) => {
       });
     }
 
-    const admin = await Admin.create({ email, password });
+    // 🔐 HASH PASSWORD
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const admin = await Admin.create({
+      email,
+      password: hashedPassword,
+    });
 
     res.json({
       success: true,
       message: "Admin created successfully",
       admin,
     });
+
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    res.json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-// LOGIN
+// ===============================
+// LOGIN ADMIN (WITH BCRYPT)
+// ===============================
 exports.loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const admin = await Admin.findOne({ email, password });
+    const admin = await Admin.findOne({ email });
 
     if (!admin) {
+      return res.json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    // 🔐 COMPARE PASSWORD
+    const isMatch = await bcrypt.compare(password, admin.password);
+
+    if (!isMatch) {
       return res.json({
         success: false,
         message: "Invalid credentials",
@@ -52,12 +77,18 @@ exports.loginAdmin = async (req, res) => {
       success: true,
       token,
     });
+
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    res.json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-// GET MESSAGES ⭐ ADD THIS
+// ===============================
+// GET MESSAGES
+// ===============================
 exports.getMessages = async (req, res) => {
   try {
     const messages = await Contact.find().sort({ createdAt: -1 });
@@ -67,11 +98,16 @@ exports.getMessages = async (req, res) => {
       messages,
     });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    res.json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-// DELETE MESSAGE ⭐ ADD THIS
+// ===============================
+// DELETE MESSAGE
+// ===============================
 exports.deleteMessage = async (req, res) => {
   try {
     await Contact.findByIdAndDelete(req.params.id);
@@ -81,6 +117,9 @@ exports.deleteMessage = async (req, res) => {
       message: "Deleted successfully",
     });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    res.json({
+      success: false,
+      message: error.message,
+    });
   }
 };

@@ -7,11 +7,11 @@ const {
   deleteMessage,
 } = require("../controllers/adminController");
 
-// ADMIN
+// ADMIN KY ROUTES
 router.post("/create", createAdmin);
 router.post("/login", loginAdmin);
 
-// ⭐ ADD THIS (IMPORTANT)
+// MSG SHOW KRWANY KY LIY
 router.get("/messages", getMessages);
 
 module.exports = router;
